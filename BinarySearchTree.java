@@ -39,6 +39,12 @@ public class BinarySearchTree<T extends Comparable<T>> implements IBinarySearchT
         return this.isFull(this.root);
     }
 
+    /**
+     * Check if the tree is full
+     *
+     * @param node the node to check
+     * @return true if the tree is full, false otherwise
+     */
     private boolean isFull(IBinaryTreeNode<T> node){
         if (node == null){
             return true;
@@ -52,104 +58,158 @@ public class BinarySearchTree<T extends Comparable<T>> implements IBinarySearchT
         return this.isFull(node.getLeftChild()) && this.isFull(node.getRightChild());
     }
 
-    @Override
+    /**
+     * Returns an iterator for the binary search tree.
+     *
+     * @param traversalType the type of traversal
+     * @return an iterator for the binary search tree
+     */
     public Iterator<T> iterator(TreeTraversalType traversalType) {
         switch (traversalType) {
             case PREORDER:
-                return new PreorderIterator(this.root);
+                return new PreorderIterator<T>(this);
             case INORDER:
-                return new InorderIterator(this.root);
+                return new InorderIterator<T>(this);
             case POSTORDER:
-                return new PostorderIterator(this.root);
+                return new PostorderIterator<T>(this);
             case LEVELORDER:
-                return new LevelorderIterator(this.root);
+                return new LevelorderIterator<T>(this);
             default:
                 throw new IllegalArgumentException("Unknown traversal type");
         }
     }
 
-    // Code ist noch nicht fertig, Iteratoren müssen noch implementiert werden
-    // Der Code im Kommentar ist nur ein Ansatz
+    /**
+     * Preorder iterator for the binary search tree.
+     *
+     * @return an iterable for the binary search tree
+     */
+    private static class PreorderIterator<T extends Comparable<T>> implements Iterator<T> {
+        Stack<IBinaryTreeNode<T>> stack = new Stack<>();
+
+        public PreorderIterator(BinarySearchTree<T> root) {
+            if (root != null) {
+                this.stack.push(root.getRootNode());
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !this.stack.isEmpty();
+        }
+
+        @Override
+        public T next() {
+            IBinaryTreeNode<T> node = stack.pop();
+            T obj = node.getValue();
+            if (node.getRightChild() != null) {
+                stack.push(node.getRightChild());
+            }
+            if (node.getLeftChild() != null) {
+                stack.push(node.getLeftChild());
+            }
+            return obj;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Inorder iterator for the binary search tree.
+     *
+     * @return an iterable for the binary search tree
+     */
+    private static class InorderIterator<T extends Comparable<T>> implements Iterator<T> {
+        Stack<IBinaryTreeNode<T>> stack = new Stack<>();
+
+        public InorderIterator(BinarySearchTree<T> root) {
+            IBinaryTreeNode<T> node = root.getRootNode();
+            while (node != null) {
+                stack.push(node);
+                node = node.getLeftChild();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !this.stack.isEmpty();
+        }
+
+        @Override
+        public T next() {
+            IBinaryTreeNode<T> node = stack.pop();
+            T obj = node.getValue();
+            if (node.getRightChild() != null) {
+                node = node.getRightChild();
+                while (node != null) {
+                    stack.push(node);
+                    node = node.getLeftChild();
+                }
+            }
+            return obj;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
 /**
-    private class PreorderIterator implements Iterator<T> {
-        private Stack<IBinaryTreeNode<T>> stack;
+     * Postorder iterator for the binary search tree.
+     *
+     * @return an iterable for the binary search tree
+     */
+    private static class PostorderIterator<T extends Comparable<T>> implements Iterator<T> {
+        Stack<IBinaryTreeNode<T>> stack = new Stack<>();
+        Stack<T> output = new Stack<>();
 
-        public PreorderIterator(IBinaryTreeNode<T> root) {
-            this.stack = new Stack<>();
+        public PostorderIterator(BinarySearchTree<T> root) {
             if (root != null) {
-                this.stack.push(root);
+                this.stack.push(root.getRootNode());
+            }
+            while (!stack.isEmpty()) {
+                IBinaryTreeNode<T> node = stack.pop();
+                output.push(node.getValue());
+                if (node.getLeftChild() != null) {
+                    stack.push(node.getLeftChild());
+                }
+                if (node.getRightChild() != null) {
+                    stack.push(node.getRightChild());
+                }
             }
         }
 
         @Override
         public boolean hasNext() {
-            return !this.stack.isEmpty();
+            return !this.output.isEmpty();
         }
 
         @Override
         public T next() {
-            if (!this.hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return null;
+            return output.pop();
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 
-    private class InorderIterator implements Iterator<T> {
-        private Stack<IBinaryTreeNode<T>> stack;
+    /**
+     * Levelorder iterator for the binary search tree.
+     *
+     * @return an iterable for the binary search tree
+     */
+    private static class LevelorderIterator<T extends Comparable<T>> implements Iterator<T> {
+        Queue<IBinaryTreeNode<T>> queue = new LinkedList<>();
 
-        public InorderIterator(IBinaryTreeNode<T> root) {
-            this.stack = new Stack<>();
+        public LevelorderIterator(BinarySearchTree<T> root) {
             if (root != null) {
-                this.stack.push(root);
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return !this.stack.isEmpty();
-        }
-
-        @Override
-        public T next() {
-            if (!this.hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return null;
-        }
-    }
-
-    private class PostorderIterator implements Iterator<T> {
-        private Stack<IBinaryTreeNode<T>> stack;
-
-        public PostorderIterator(IBinaryTreeNode<T> root) {
-            this.stack = new Stack<>();
-            if (root != null) {
-                this.stack.push(root);
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return !this.stack.isEmpty();
-        }
-
-        @Override
-        public T next() {
-            if (!this.hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return null;
-        }
-    }
-
-    private class LevelorderIterator implements Iterator<T> {
-        private Queue<IBinaryTreeNode<T>> queue;
-
-        public LevelorderIterator(IBinaryTreeNode<T> root) {
-            this.queue = new LinkedList<>();
-            if (root != null) {
-                this.queue.add(root);
+                this.queue.add(root.getRootNode());
             }
         }
 
@@ -160,11 +220,20 @@ public class BinarySearchTree<T extends Comparable<T>> implements IBinarySearchT
 
         @Override
         public T next() {
-            if (!this.hasNext()) {
-                throw new NoSuchElementException();
+            IBinaryTreeNode<T> node = queue.poll();
+            T obj = node.getValue();
+            if (node.getLeftChild() != null) {
+                queue.add(node.getLeftChild());
             }
-            return null;
+            if (node.getRightChild() != null) {
+                queue.add(node.getRightChild());
+            }
+            return obj;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
-        */
 }
